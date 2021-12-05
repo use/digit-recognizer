@@ -55,6 +55,7 @@
     // ];
 
     const labelThreshold = .7;
+    let autoCenterOn = true;
 
     function classify(item, weights) {
       let values = [];
@@ -159,6 +160,15 @@
       doNumberRecognize();
     });
 
+    document.querySelector('#autoCenterButton').addEventListener('click', function() {
+      autoCenterOn = !autoCenterOn;
+      if (autoCenterOn) {
+        document.querySelector('#autoCenterButton').textContent = 'Auto Center (On)';
+      } else {
+        document.querySelector('#autoCenterButton').textContent = 'Auto Center (Off)';
+      }
+    });
+
     document.querySelector('#controlsButton').addEventListener('click', function() {
       const panel = document.querySelector('.control-panel__items');
       panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
@@ -212,7 +222,12 @@
           }
         }
 
-        pixels = pixels.map(p => p > .5 ? 1 : 0); // filter only high values
+        pixels = pixels.map(p => p > .7 ? 1 : 0); // filter only high values
+
+        if (autoCenterOn) {
+          pixels = centerImage(pixels);
+        }
+
         printSampleToCanvas(pixels);
 
         let results = classify(pixels, weights);
@@ -234,6 +249,43 @@
           }
         }
       });
+    }
+
+    function centerImage(pixels) {
+      let sumX = 0;
+      let sumY = 0;
+      let numActive = 0;
+      for (let y = 0; y < pixelHeight; y++) {
+        for (let x = 0; x < pixelWidth; x++) {
+          if (pixels[y * pixelWidth + x] > .5) {
+            sumX += x;
+            sumY += y;
+            numActive ++;
+          }
+        }
+      }
+      let com = {
+        x: sumX / numActive,
+        y: sumY / numActive,
+      }
+
+      let xOffset = Math.round(pixelWidth / 2 - com.x);
+      let yOffset = Math.round(pixelHeight / 2 - com.y);
+      let newPixels = Array(pixelHeight * pixelWidth).fill(0);
+      for (let y = 0; y < pixelHeight; y++) {
+        for (let x = 0; x < pixelWidth; x++) {
+          if (pixels[y * pixelWidth + x] < .5) {
+            continue;
+          }
+          let newX = x + xOffset;
+          let newY = y + yOffset;
+          if (newX > pixelWidth - 1 || newY > pixelHeight - 1) {
+            continue;
+          }
+          newPixels[newY * pixelWidth + newX] = pixels[y * pixelWidth + x];
+        }
+      }
+      return newPixels;
     }
 
     function printSampleToCanvas(sample) {
@@ -486,6 +538,7 @@
       ">
         <button id="takeSnapshotButton">Take Sample</button>
         <button id="useVideoButton">Use Webcam</button>
+        <button id="autoCenterButton">Auto Center (On)</button>
         <button id="toggleCanvasButton">Toggle Canvas</button>
         <button id="togglePlayButton">Play/Pause</button>
         <input type="number" id="intervalAmount" value="500"/>
