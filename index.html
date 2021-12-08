@@ -222,7 +222,7 @@
           }
         }
 
-        // pixels = pixels.map(p => p > .7 ? 1 : 0); // filter only high values
+        pixels = pixels.map(p => p > .7 ? 1 : 0); // filter only high values
 
         if (autoCenterOn) {
           pixels = centerImage(pixels);
@@ -257,7 +257,7 @@
       let numActive = 0;
       for (let y = 0; y < pixelHeight; y++) {
         for (let x = 0; x < pixelWidth; x++) {
-          if (pixels[y * pixelWidth + x] > .5) { // ignore pixels below 50% gray
+          if (pixels[y * pixelWidth + x] > .5) {
             sumX += x;
             sumY += y;
             numActive ++;
@@ -274,7 +274,7 @@
       let newPixels = Array(pixelHeight * pixelWidth).fill(0);
       for (let y = 0; y < pixelHeight; y++) {
         for (let x = 0; x < pixelWidth; x++) {
-          if (pixels[y * pixelWidth + x] < .5) { // remove any pixels below 50% gray
+          if (pixels[y * pixelWidth + x] < .5) {
             continue;
           }
           let newX = x + xOffset;
@@ -304,7 +304,12 @@
             xScale,
             yScale,
           ];
-          ctx.fillStyle = "hsl(0, 0%, " + (100 * (1 - sample[y * pixelWidth + x])) + "%)";
+          if (sample[y * pixelWidth + x] > .5) {
+            ctx.fillStyle = 'black';
+          } else {
+            ctx.fillStyle = 'white';
+          }
+          // ctx.fillStyle = "hsl(0, 0%, " + (100 * (1 - sample[y * pixelWidth + x])) + "%)";
           ctx.fillRect(...rect);
         }
       }
